@@ -12,6 +12,10 @@ Paper Scorecard is an open-source browser extension prototype that shows an AI r
 
 It is designed for paper triage: helping readers quickly judge whether a paper deserves deep reading, monitoring, or skipping. It does not replace peer review.
 
+### Preview
+
+![Paper Scorecard preview on an arXiv abstract page](assets/paper-scorecard-preview.png)
+
 ### Features
 
 - Runs on `https://arxiv.org/abs/*` and `https://arxiv.org/pdf/*`.
@@ -163,6 +167,10 @@ npm run test:core
 Paper Scorecard 是一个开源浏览器插件原型，用浏览器侧边栏为 arXiv 论文生成 AI 审稿式评分卡。
 
 它面向论文筛选和快速预读：帮助读者判断一篇论文是否值得精读、持续关注或暂时跳过。它不能替代正式同行评议。
+
+### 效果预览
+
+![Paper Scorecard 在 arXiv 摘要页上的效果预览](assets/paper-scorecard-preview.png)
 
 ### 功能
 
