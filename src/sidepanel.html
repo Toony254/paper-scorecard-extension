@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Paper Scorecard</title>
+    <link rel="stylesheet" href="content.css">
+    <link rel="stylesheet" href="sidepanel.css">
+  </head>
+  <body>
+    <main id="sidepanel-root" class="ps-sidepanel">
+      <header class="ps-header">
+        <div class="ps-title">Paper Scorecard</div>
+        <div class="ps-actions">
+          <button class="ps-button" data-action="options">Settings</button>
+          <button class="ps-button primary" data-action="review">Review</button>
+        </div>
+      </header>
+      <div id="sidepanel-body" class="ps-body">
+        <p class="ps-status">Open an arXiv abstract or PDF page, then click Review.</p>
+      </div>
+    </main>
+    <script src="review-renderer.js"></script>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

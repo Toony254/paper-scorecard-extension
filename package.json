@@ -1,0 +1,25 @@
+{
+  "name": "paper-scorecard-extension",
+  "version": "0.1.0",
+  "description": "AI reviewer sidebar scorecards for arXiv papers with PDF extraction and related-work search.",
+  "main": "index.js",
+  "scripts": {
+    "check:syntax": "node --check src/background.js && node --check src/content.js && node --check src/review-renderer.js && node --check src/options.js && node --check src/offscreen.js && node --check src/popup.js && node --check src/sidepanel.js",
+    "test:core": "node test/core-flow-test.mjs",
+    "test": "npm run check:syntax"
+  },
+  "keywords": [
+    "arxiv",
+    "browser-extension",
+    "paper-review",
+    "ai-reviewer",
+    "research"
+  ],
+  "author": "Tony",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "pdfjs-dist": "^5.7.284",
+    "playwright": "^1.60.0"
+  }
+}

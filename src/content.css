@@ -1,0 +1,254 @@
+:root {
+  --ps-bg: #ffffff;
+  --ps-ink: #1d2329;
+  --ps-muted: #5f6872;
+  --ps-border: #d8dee6;
+  --ps-soft: #f5f7fa;
+  --ps-accent: #0b6bcb;
+  --ps-good: #147d52;
+  --ps-warn: #a15c00;
+  --ps-bad: #b42318;
+  --ps-shadow: 0 16px 48px rgba(20, 31, 45, 0.18);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ps-bg: #11161d;
+    --ps-ink: #e6edf3;
+    --ps-muted: #9aa7b4;
+    --ps-border: #303946;
+    --ps-soft: #171e27;
+    --ps-accent: #58a6ff;
+    --ps-good: #56d089;
+    --ps-warn: #d29922;
+    --ps-bad: #ff7b72;
+    --ps-shadow: 0 18px 52px rgba(0, 0, 0, 0.38);
+  }
+}
+
+#paper-scorecard-root[data-theme="light"] {
+  --ps-bg: #ffffff;
+  --ps-ink: #1d2329;
+  --ps-muted: #5f6872;
+  --ps-border: #d8dee6;
+  --ps-soft: #f5f7fa;
+  --ps-accent: #0b6bcb;
+  --ps-bad: #b42318;
+}
+
+#paper-scorecard-root[data-theme="dark"] {
+  --ps-bg: #11161d;
+  --ps-ink: #e6edf3;
+  --ps-muted: #9aa7b4;
+  --ps-border: #303946;
+  --ps-soft: #171e27;
+  --ps-accent: #58a6ff;
+  --ps-bad: #ff7b72;
+}
+
+#paper-scorecard-root {
+  position: fixed;
+  top: 84px;
+  right: 18px;
+  width: min(390px, calc(100vw - 36px));
+  max-height: calc(100vh - 110px);
+  z-index: 2147483647;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  color: var(--ps-ink);
+}
+
+.ps-panel {
+  overflow: hidden;
+  border: 1px solid var(--ps-border);
+  border-radius: 8px;
+  background: var(--ps-bg);
+  color: var(--ps-ink);
+  box-shadow: var(--ps-shadow);
+}
+
+.ps-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--ps-border);
+  background: var(--ps-soft);
+}
+
+#paper-scorecard-root .ps-header {
+  cursor: move;
+  user-select: none;
+}
+
+.ps-title {
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.ps-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.ps-button {
+  min-height: 30px;
+  border: 1px solid var(--ps-border);
+  border-radius: 6px;
+  padding: 4px 9px;
+  background: var(--ps-bg);
+  color: var(--ps-ink);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ps-button.primary {
+  border-color: var(--ps-accent);
+  background: var(--ps-accent);
+  color: #fff;
+}
+
+.ps-button:disabled {
+  cursor: default;
+  opacity: 0.58;
+}
+
+.ps-body {
+  max-height: calc(100vh - 56px);
+  overflow: auto;
+  padding: 12px;
+  background: var(--ps-bg);
+}
+
+.ps-status {
+  margin: 0;
+  color: var(--ps-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.ps-error {
+  border-left: 3px solid var(--ps-bad);
+  padding: 8px 10px;
+  background: color-mix(in srgb, var(--ps-bad) 12%, var(--ps-bg));
+  color: var(--ps-bad);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.ps-summary {
+  margin-bottom: 12px;
+  padding: 10px;
+  border: 1px solid var(--ps-border);
+  border-radius: 8px;
+  background: var(--ps-soft);
+}
+
+.ps-score-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ps-score {
+  color: var(--ps-accent);
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.ps-venue {
+  text-align: right;
+  color: var(--ps-ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ps-confidence {
+  margin-top: 6px;
+  color: var(--ps-muted);
+  font-size: 12px;
+}
+
+.ps-section {
+  margin-top: 12px;
+}
+
+.ps-section h4 {
+  margin: 0 0 7px;
+  color: var(--ps-ink);
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.ps-dimension {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--ps-border);
+}
+
+.ps-dimension:first-child {
+  border-top: 0;
+}
+
+.ps-dim-name,
+.ps-dim-score {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.ps-dim-reason {
+  grid-column: 1 / -1;
+  color: var(--ps-muted);
+  font-size: 12px;
+  line-height: 1.38;
+}
+
+.ps-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--ps-ink);
+  font-size: 12px;
+  line-height: 1.42;
+}
+
+.ps-list li {
+  margin: 4px 0;
+}
+
+.ps-small {
+  color: var(--ps-muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.ps-collapsed {
+  width: auto !important;
+  bottom: auto !important;
+}
+
+.ps-hidden {
+  display: none !important;
+}
+
+.ps-collapsed .ps-body {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  #paper-scorecard-root {
+    top: auto;
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    width: auto;
+  }
+}

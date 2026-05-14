@@ -1,0 +1,103 @@
+body {
+  margin: 0;
+  background: #f5f7fa;
+  color: #1d2329;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+}
+
+.page {
+  width: min(760px, calc(100vw - 32px));
+  margin: 40px auto;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 28px;
+}
+
+h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.lede {
+  margin: 0 0 22px;
+  color: #5f6872;
+}
+
+.form,
+.notes {
+  border: 1px solid #d8dee6;
+  border-radius: 8px;
+  padding: 20px;
+  background: #fff;
+}
+
+.notes {
+  margin-top: 16px;
+}
+
+label {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 14px;
+  font-weight: 700;
+}
+
+label span {
+  font-size: 13px;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.checkbox-row input {
+  min-height: 0;
+  width: 16px;
+  height: 16px;
+}
+
+input,
+select {
+  min-height: 38px;
+  border: 1px solid #cbd3dc;
+  border-radius: 6px;
+  padding: 0 10px;
+  font: inherit;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.hidden {
+  display: none;
+}
+
+button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 14px;
+  background: #0b6bcb;
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.status {
+  min-height: 18px;
+  color: #147d52;
+  font-size: 13px;
+}
+
+@media (max-width: 620px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

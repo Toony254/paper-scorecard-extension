@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Paper Scorecard Settings</title>
+    <link rel="stylesheet" href="options.css">
+  </head>
+  <body>
+    <main class="page">
+      <h1>Paper Scorecard Settings</h1>
+      <p class="lede">Configure a base API URL like cc-switch. The extension automatically appends the correct API path.</p>
+
+      <form id="settings-form" class="form">
+        <label>
+          <span>API format</span>
+          <select id="provider" name="provider">
+            <option value="openai-responses">OpenAI Responses compatible</option>
+            <option value="openai-chat">OpenAI Chat Completions compatible</option>
+            <option value="claude-messages">Claude Messages compatible</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Base URL</span>
+          <input id="baseUrl" name="baseUrl" type="url" required placeholder="https://api.openai.com">
+        </label>
+
+        <label>
+          <span>API key</span>
+          <input id="apiKey" name="apiKey" type="password" autocomplete="off" placeholder="sk-...">
+        </label>
+
+        <label>
+          <span>Model</span>
+          <input id="model" name="model" type="text" required placeholder="gpt-5.4">
+        </label>
+
+        <label>
+          <span>Reasoning effort</span>
+          <select id="reasoningEffort" name="reasoningEffort">
+            <option value="none">none</option>
+            <option value="minimal">minimal</option>
+            <option value="low">low</option>
+            <option value="medium">medium</option>
+            <option value="high">high</option>
+          </select>
+        </label>
+
+        <label class="checkbox-row">
+          <input id="disableResponseStorage" name="disableResponseStorage" type="checkbox" value="true">
+          <span>Disable response storage</span>
+        </label>
+
+        <label>
+          <span>Review output language</span>
+          <select id="outputLanguage" name="outputLanguage">
+            <option value="zh-CN">简体中文</option>
+            <option value="en">English</option>
+            <option value="ja">日本語</option>
+            <option value="ko">한국어</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+            <option value="es">Español</option>
+            <option value="custom">Custom</option>
+          </select>
+        </label>
+
+        <label id="custom-language-row">
+          <span>Custom language or style</span>
+          <input id="customOutputLanguage" name="customOutputLanguage" type="text" placeholder="e.g. Traditional Chinese, English academic review style">
+        </label>
+
+        <label>
+          <span>Theme</span>
+          <select id="themeMode" name="themeMode">
+            <option value="auto">Auto</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </label>
+
+        <label class="checkbox-row">
+          <input id="reviewPdfOnAbs" name="reviewPdfOnAbs" type="checkbox" value="true">
+          <span>Fetch PDF text when reviewing from abstract pages</span>
+        </label>
+
+        <label class="checkbox-row">
+          <input id="cachePdfText" name="cachePdfText" type="checkbox" value="true">
+          <span>Cache extracted PDF text locally</span>
+        </label>
+
+        <label class="checkbox-row">
+          <input id="enableRelatedWorkSearch" name="enableRelatedWorkSearch" type="checkbox" value="true">
+          <span>Search arXiv related work before scoring</span>
+        </label>
+
+        <div class="grid">
+          <label>
+            <span>Temperature</span>
+            <input id="temperature" name="temperature" type="number" min="0" max="1" step="0.1">
+          </label>
+
+          <label>
+            <span>Max tokens</span>
+            <input id="maxTokens" name="maxTokens" type="number" min="500" max="6000" step="100">
+          </label>
+
+          <label>
+            <span>Related work limit</span>
+            <input id="relatedWorkLimit" name="relatedWorkLimit" type="number" min="0" max="100" step="1">
+          </label>
+        </div>
+
+        <button type="submit">Save Settings</button>
+        <p id="status" class="status" role="status"></p>
+      </form>
+
+      <section class="notes">
+        <h2>Endpoint Mapping</h2>
+        <p>OpenAI Responses compatible: Base URL + <code>/v1/responses</code></p>
+        <p>OpenAI Chat Completions compatible: Base URL + <code>/v1/chat/completions</code></p>
+        <p>Claude Messages compatible: Base URL + <code>/v1/messages</code></p>
+
+        <h2>Rubric</h2>
+        <p>The extension scores papers on originality, research question importance, claims support, experiment soundness, writing clarity, value to the research community, and prior work contextualization.</p>
+      </section>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>
