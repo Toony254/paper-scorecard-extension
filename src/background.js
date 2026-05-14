@@ -1,7 +1,6 @@
 const DEFAULT_SETTINGS = {
   provider: "openai-responses",
   baseUrl: "https://api.openai.com",
-  apiKey: "",
   model: "gpt-5.4",
   reasoningEffort: "high",
   disableResponseStorage: true,
@@ -14,6 +13,10 @@ const DEFAULT_SETTINGS = {
   relatedWorkLimit: 10,
   temperature: 0.2,
   maxTokens: 2200
+};
+
+const DEFAULT_SECRET_SETTINGS = {
+  apiKey: ""
 };
 
 const REVIEW_SCHEMA_HINT = {
@@ -42,6 +45,7 @@ chrome.runtime.onInstalled.addListener(async () => {
     if (existing[key] === undefined) next[key] = value;
   }
   if (Object.keys(next).length) await chrome.storage.sync.set(next);
+  await migrateLegacySecrets();
   if (chrome.sidePanel?.setPanelBehavior) {
     await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
   }
@@ -83,16 +87,29 @@ async function handleMessage(message, sender) {
 }
 
 async function getSettings() {
-  const settings = await chrome.storage.sync.get({ ...DEFAULT_SETTINGS, endpoint: "" });
+  await migrateLegacySecrets();
+  const [settings, secrets] = await Promise.all([
+    chrome.storage.sync.get({ ...DEFAULT_SETTINGS, endpoint: "" }),
+    chrome.storage.local.get(DEFAULT_SECRET_SETTINGS)
+  ]);
+  settings.apiKey = secrets.apiKey || "";
   if (!settings.baseUrl && settings.endpoint) settings.baseUrl = deriveBaseUrl(settings.endpoint);
   return settings;
+}
+
+async function migrateLegacySecrets() {
+  const legacy = await chrome.storage.sync.get("apiKey");
+  if (legacy.apiKey) {
+    const local = await chrome.storage.local.get(DEFAULT_SECRET_SETTINGS);
+    if (!local.apiKey) await chrome.storage.local.set({ apiKey: legacy.apiKey });
+    await chrome.storage.sync.remove("apiKey");
+  }
 }
 
 async function saveSettings(settings) {
   const next = {
     provider: normalizeProvider(settings.provider),
     baseUrl: normalizeBaseUrl(settings.baseUrl || settings.endpoint || DEFAULT_SETTINGS.baseUrl),
-    apiKey: String(settings.apiKey || "").trim(),
     model: String(settings.model || DEFAULT_SETTINGS.model).trim(),
     reasoningEffort: normalizeReasoningEffort(settings.reasoningEffort),
     disableResponseStorage: parseBoolean(settings.disableResponseStorage, DEFAULT_SETTINGS.disableResponseStorage),
@@ -106,8 +123,14 @@ async function saveSettings(settings) {
     temperature: clampNumber(settings.temperature, 0, 1, DEFAULT_SETTINGS.temperature),
     maxTokens: Math.round(clampNumber(settings.maxTokens, 500, 12000, DEFAULT_SETTINGS.maxTokens))
   };
-  await chrome.storage.sync.set(next);
-  return { ok: true, settings: next };
+  const secrets = {
+    apiKey: String(settings.apiKey || "").trim()
+  };
+  await Promise.all([
+    chrome.storage.sync.set(next),
+    chrome.storage.local.set(secrets)
+  ]);
+  return { ok: true, settings: { ...next, ...secrets } };
 }
 
 async function getCachedReview(paperId) {
@@ -256,8 +279,12 @@ async function ensureOffscreenDocument() {
 
 async function searchRelatedWork(paper, limit) {
   if (!limit) return [];
-  const htmlResults = await searchRelatedWorkHtml(paper, limit);
-  if (htmlResults.length) return htmlResults;
+  try {
+    const htmlResults = await searchRelatedWorkHtml(paper, limit);
+    if (htmlResults.length) return htmlResults;
+  } catch (error) {
+    // Fall back to the official arXiv API when the search page markup or network path fails.
+  }
   const query = buildRelatedWorkQuery(paper);
   if (!query) return [];
   const url = `https://export.arxiv.org/api/query?search_query=${encodeURIComponent(query)}&start=0&max_results=${limit + 3}&sortBy=relevance&sortOrder=descending`;
@@ -268,10 +295,24 @@ async function searchRelatedWork(paper, limit) {
 }
 
 async function searchRelatedWorkHtml(paper, limit) {
-  const terms = encodeURIComponent(String(paper.title || paper.abstract || paper.arxivId).replace(/[^\w\s-]/g, " ").split(/\s+/).filter((word) => word.length > 4).slice(0, 10).join(" "));
+  const terms = buildRelatedWorkTerms(paper);
+  if (!terms) return [];
   const primary = await searchRelatedWorkHtmlQuery(terms, paper, limit);
   if (primary.length) return primary;
-  return searchRelatedWorkHtmlQuery("world+model+latent+state+representation+agent", paper, limit);
+  const fallbackTerms = buildRelatedWorkTerms({ ...paper, title: "", abstract: paper.subjects || paper.comments || "" });
+  return fallbackTerms && fallbackTerms !== terms ? searchRelatedWorkHtmlQuery(fallbackTerms, paper, limit) : [];
+}
+
+function buildRelatedWorkTerms(paper) {
+  return encodeURIComponent(
+    String(paper.title || paper.abstract || paper.arxivId || "")
+      .replace(/[^\w\s-]/g, " ")
+      .split(/\s+/)
+      .map((word) => word.toLowerCase())
+      .filter((word) => word.length > 4)
+      .slice(0, 10)
+      .join(" ")
+  );
 }
 
 async function searchRelatedWorkHtmlQuery(terms, paper, limit) {
