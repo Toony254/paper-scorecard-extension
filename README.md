@@ -59,7 +59,18 @@ The estimated level is deliberately conservative:
 
 Scores are auxiliary reading signals, not peer-review ground truth.
 
-### Install Locally
+### Install
+
+The browser warning that asks you to turn off developer mode is shown by Chrome/Edge when an extension is loaded with `Load unpacked`. It is a browser-level warning for sideloaded development extensions, not a Paper Scorecard runtime error. The warning disappears only when the extension is installed from an official browser store or managed enterprise policy.
+
+For normal users, install the extension from a signed browser-store release once available:
+
+- Chrome Web Store
+- Microsoft Edge Add-ons
+
+For developers, use the unpacked installation flow below. Developer mode must remain enabled for this flow.
+
+### Developer Install
 
 1. Open Chrome or Edge.
 2. Go to `chrome://extensions` or `edge://extensions`.
@@ -75,6 +86,22 @@ Scores are auxiliary reading signals, not peer-review ground truth.
    - Review output language, for example `简体中文` or `English`
    - Max tokens, default `2200`
    - Related work limit, default `10`
+
+### Package For Store Submission
+
+Create a distributable zip:
+
+```bash
+npm run package
+```
+
+The output is:
+
+```text
+dist/paper-scorecard-extension.zip
+```
+
+Submit this zip to the Chrome Web Store or Microsoft Edge Add-ons developer dashboard. Installing the reviewed store version avoids the developer-mode warning.
 
 ### Use
 
@@ -215,7 +242,18 @@ Paper Scorecard 是一个开源浏览器插件原型，用浏览器侧边栏为 
 
 评分只是辅助阅读信号，不是正式同行评议结论。
 
-### 本地安装
+### 安装方式
+
+浏览器提示“关闭开发人员模式”通常出现在使用 `Load unpacked` 加载未打包扩展时。这是 Chrome/Edge 对侧载开发版扩展的浏览器级安全提示，不是 Paper Scorecard 的运行错误。只有从官方浏览器商店安装已签名版本，或使用企业托管策略部署时，这个提示才会消失。
+
+普通用户应优先安装正式发布版本：
+
+- Chrome Web Store
+- Microsoft Edge Add-ons
+
+开发者可以使用下面的未打包安装方式。使用这种方式时必须开启开发者模式。
+
+### 开发者安装
 
 1. 打开 Chrome 或 Edge。
 2. 进入 `chrome://extensions` 或 `edge://extensions`。
@@ -231,6 +269,22 @@ Paper Scorecard 是一个开源浏览器插件原型，用浏览器侧边栏为 
    - 审稿输出语言，例如 `简体中文` 或 `English`
    - Max tokens，默认 `2200`
    - Related work limit，默认 `10`
+
+### 打包提交浏览器商店
+
+生成可提交的 zip 包：
+
+```bash
+npm run package
+```
+
+输出位置：
+
+```text
+dist/paper-scorecard-extension.zip
+```
+
+将这个 zip 提交到 Chrome Web Store 或 Microsoft Edge Add-ons 开发者后台。用户安装审核通过的商店版本后，就不会再看到开发者模式提示。
 
 ### 使用方式
 
