@@ -49,12 +49,12 @@ The implementation also follows reviewer-quality guidance from:
 - [arXiv API User Manual](https://arxiv.org/help/api/user-manual): arXiv metadata and related-paper retrieval.
 - [PDF.js](https://github.com/mozilla/pdf.js): browser-side PDF text extraction.
 
-The estimated level is deliberately conservative:
+The estimated potential is deliberately conservative:
 
-- `CCF-A potential`
-- `CCF-B potential`
+- `landmark/high-impact potential`
+- `strong venue potential`
 - `workshop-level`
-- `technical-report/preliminary`
+- `preliminary/needs more evidence`
 - `unclear`
 
 Scores are auxiliary reading signals, not peer-review ground truth.
@@ -232,12 +232,12 @@ Paper Scorecard 是一个开源浏览器插件原型，用浏览器侧边栏为 
 - [arXiv API User Manual](https://arxiv.org/help/api/user-manual)：arXiv 元数据和相关论文检索。
 - [PDF.js](https://github.com/mozilla/pdf.js)：浏览器端 PDF 文本提取。
 
-插件对论文发表层次只做保守估计：
+插件对论文潜力只做保守估计：
 
-- `CCF-A potential`
-- `CCF-B potential`
+- `landmark/high-impact potential`
+- `strong venue potential`
 - `workshop-level`
-- `technical-report/preliminary`
+- `preliminary/needs more evidence`
 - `unclear`
 
 评分只是辅助阅读信号，不是正式同行评议结论。

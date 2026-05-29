@@ -30,6 +30,7 @@
           <span>API key</span>
           <input id="apiKey" name="apiKey" type="password" autocomplete="off" placeholder="sk-...">
         </label>
+        <button id="openrouter-login" type="button" class="secondary">Connect OpenRouter with OAuth</button>
 
         <label>
           <span>Model</span>
@@ -121,6 +122,7 @@
         <p>OpenAI Responses compatible: Base URL + <code>/v1/responses</code></p>
         <p>OpenAI Chat Completions compatible: Base URL + <code>/v1/chat/completions</code></p>
         <p>Claude Messages compatible: Base URL + <code>/v1/messages</code></p>
+        <p>OpenRouter OAuth uses PKCE to create a user-controlled API key, then configures the OpenAI Chat Completions compatible endpoint.</p>
 
         <h2>Rubric</h2>
         <p>The extension scores papers on originality, research question importance, claims support, experiment soundness, writing clarity, value to the research community, and prior work contextualization.</p>

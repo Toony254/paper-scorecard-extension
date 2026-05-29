@@ -21,7 +21,7 @@ const DEFAULT_SECRET_SETTINGS = {
 
 const REVIEW_SCHEMA_HINT = {
   overall_score: "number from 0 to 10",
-  estimated_level: "one of: CCF-A potential, CCF-B potential, workshop-level, technical-report/preliminary, unclear",
+  estimated_level: "one of: landmark/high-impact potential, strong venue potential, solid incremental contribution, preliminary/needs more evidence, unclear",
   confidence: "High, Medium, or Low",
   review_scope: "what was analyzed",
   one_line_judgment: "single sentence",
@@ -194,10 +194,19 @@ async function enrichPaperForReview(paper, settings) {
     }
   }
 
+  try {
+    enriched.impactSignals = await fetchImpactSignals(enriched);
+    enriched.diagnostics.push("Loaded citation and author signals from Semantic Scholar.");
+  } catch (error) {
+    enriched.impactSignalsError = error.message || String(error);
+    enriched.diagnostics.push(`Citation and author signal fetch failed: ${enriched.impactSignalsError}`);
+  }
+
   const scopes = [];
   if (enriched.abstract) scopes.push("arXiv metadata and abstract");
   if (enriched.pdfText) scopes.push("PDF text");
   if (enriched.relatedWork?.length) scopes.push("arXiv related-work search");
+  if (enriched.impactSignals) scopes.push("citation and author signals");
   enriched.reviewScope = scopes.join(" + ") || "available metadata";
   return enriched;
 }
@@ -222,7 +231,9 @@ async function fetchArxivMetadata(arxivId) {
     authors,
     abstract: normalizeSpace(decodeXml(extractXml(entry, "summary"))),
     subjects: categories,
-    comments: normalizeSpace(decodeXml(extractXml(entry, "arxiv:comment")))
+    comments: normalizeSpace(decodeXml(extractXml(entry, "arxiv:comment"))),
+    published: decodeXml(extractXml(entry, "published")).slice(0, 10),
+    updated: decodeXml(extractXml(entry, "updated")).slice(0, 10)
   };
 }
 
@@ -236,7 +247,8 @@ async function fetchArxivAbsMetadata(arxivId, reason) {
   const abstract = normalizeSpace(stripTags(extractHtml(html, /<blockquote class="abstract[^"]*">([\s\S]*?)<\/blockquote>/i))).replace(/^Abstract:\s*/i, "");
   const subjects = normalizeSpace(stripTags(extractHtml(html, /<td class="tablecell subjects">([\s\S]*?)<\/td>/i)));
   const comments = normalizeSpace(stripTags(extractHtml(html, /<td class="tablecell comments">([\s\S]*?)<\/td>/i)));
-  return { title, authors, abstract, subjects, comments };
+  const submitted = normalizeSpace(stripTags(extractHtml(html, /<div class="dateline">([\s\S]*?)<\/div>/i)));
+  return { title, authors, abstract, subjects, comments, published: parseArxivSubmittedDate(submitted) };
 }
 
 async function getPdfText(paper, settings) {
@@ -279,8 +291,9 @@ async function ensureOffscreenDocument() {
 
 async function searchRelatedWork(paper, limit) {
   if (!limit) return [];
+  const paperDate = getPaperDate(paper);
   try {
-    const htmlResults = await searchRelatedWorkHtml(paper, limit);
+    const htmlResults = filterRelatedWorkByDate(await searchRelatedWorkHtml(paper, limit), paperDate);
     if (htmlResults.length) return htmlResults;
   } catch (error) {
     // Fall back to the official arXiv API when the search page markup or network path fails.
@@ -291,7 +304,7 @@ async function searchRelatedWork(paper, limit) {
   const response = await fetch(url);
   if (!response.ok) return searchRelatedWorkFallback(paper, limit);
   const xml = await response.text();
-  return parseArxivFeed(xml, paper.arxivId).slice(0, limit);
+  return filterRelatedWorkByDate(parseArxivFeed(xml, paper.arxivId), paperDate).slice(0, limit);
 }
 
 async function searchRelatedWorkHtml(paper, limit) {
@@ -332,7 +345,7 @@ async function searchRelatedWorkHtmlQuery(terms, paper, limit) {
         id,
         title: normalizeSpace(stripTags(extractHtml(chunk, /<p class="title[^"]*">([\s\S]*?)<\/p>/i))),
         summary: normalizeSpace(stripTags(extractHtml(chunk, /<span class="abstract-full[^"]*">([\s\S]*?)<\/span>/i))).slice(0, 900),
-        published: "",
+        published: parseArxivSubmittedDate(stripTags(extractHtml(chunk, /<p class="is-size-7">([\s\S]*?)<\/p>/i))),
         url: idUrl
       };
     })
@@ -346,7 +359,7 @@ async function searchRelatedWorkFallback(paper, limit) {
   const response = await fetch(url);
   if (!response.ok) return [];
   const xml = await response.text();
-  return parseArxivFeed(xml, paper.arxivId).slice(0, limit);
+  return filterRelatedWorkByDate(parseArxivFeed(xml, paper.arxivId), getPaperDate(paper)).slice(0, limit);
 }
 
 function buildRelatedWorkQuery(paper) {
@@ -380,6 +393,28 @@ function parseArxivFeed(xml, currentId) {
       };
     })
     .filter((item) => item.id && !sameArxivId(item.id, currentId));
+}
+
+async function fetchImpactSignals(paper) {
+  if (!paper.arxivId) return null;
+  const url = `https://api.semanticscholar.org/graph/v1/paper/arXiv:${encodeURIComponent(stripArxivVersion(paper.arxivId))}?fields=title,citationCount,influentialCitationCount,year,publicationDate,authors.name,authors.authorId,authors.hIndex,authors.citationCount`;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Semantic Scholar request failed (${response.status}).`);
+  const data = await response.json();
+  return {
+    title: data.title || "",
+    citationCount: numberOrNull(data.citationCount),
+    influentialCitationCount: numberOrNull(data.influentialCitationCount),
+    year: numberOrNull(data.year),
+    publicationDate: data.publicationDate || "",
+    authors: Array.isArray(data.authors)
+      ? data.authors.slice(0, 8).map((author) => ({
+          name: author.name || "",
+          hIndex: numberOrNull(author.hIndex),
+          citationCount: numberOrNull(author.citationCount)
+        }))
+      : []
+  };
 }
 
 async function getCurrentTabPaper(tabId) {
@@ -536,6 +571,8 @@ Paper metadata:
 - PDF: ${paper.pdfUrl}
 - Title: ${paper.title || "Unknown from current page"}
 - Authors: ${paper.authors || "Unknown from current page"}
+- Published: ${paper.published || "Unknown"}
+- Last updated: ${paper.updated || "Unknown"}
 - Subjects: ${paper.subjects || "Unknown"}
 - Comments: ${paper.comments || "N/A"}
 
@@ -551,6 +588,9 @@ ${formatDiagnostics(paper)}
 Retrieved arXiv related work:
 ${formatRelatedWork(paper)}
 
+Citation and author signals:
+${formatImpactSignals(paper)}
+
 Scoring instructions:
 - Use 0-10 scores.
 - Include exactly these seven dimensions:
@@ -561,8 +601,10 @@ Scoring instructions:
   5. Writing Clarity
   6. Value to Research Community
   7. Prior Work Contextualization
-- Estimate level conservatively as CCF-A potential, CCF-B potential, workshop-level, technical-report/preliminary, or unclear.
+- Estimate potential conservatively as landmark/high-impact potential, strong venue potential, solid incremental contribution, preliminary/needs more evidence, or unclear. Do not use CCF categories.
 - Explicitly judge novelty and theoretical value against the retrieved related work when available.
+- When judging novelty, compare only against related work published no later than this paper's publication date. Later papers may indicate influence or follow-up impact, but must not be used to claim this paper lacked novelty at submission time.
+- Use citation count and author signals only as weak contextual evidence of impact and credibility. Do not let famous authors or high citations override paper-level evidence.
 - If PDF text is present, distinguish between unavailable content and content that is merely not reliably represented by text extraction.
 - If only partial PDF text or metadata is available, lower confidence.
 - Strengths and weaknesses must be specific to this paper, not generic.
@@ -580,6 +622,22 @@ function formatRelatedWork(paper) {
   return paper.relatedWorkError || "Not available.";
 }
 
+function formatImpactSignals(paper) {
+  const signals = paper.impactSignals;
+  if (!signals) return paper.impactSignalsError || "Not available.";
+  const authors = Array.isArray(signals.authors) && signals.authors.length
+    ? signals.authors
+        .map((author) => `${author.name || "Unknown"} (h-index: ${formatNullable(author.hIndex)}, citations: ${formatNullable(author.citationCount)})`)
+        .join("; ")
+    : "Not available";
+  return [
+    `Semantic Scholar citation count: ${formatNullable(signals.citationCount)}`,
+    `Influential citation count: ${formatNullable(signals.influentialCitationCount)}`,
+    `Publication date: ${signals.publicationDate || signals.year || "Unknown"}`,
+    `Author signals: ${authors}`
+  ].join("\n");
+}
+
 function formatDiagnostics(paper) {
   if (paper.diagnostics?.length) return paper.diagnostics.map((item) => `- ${item}`).join("\n");
   return "No diagnostics.";
@@ -589,7 +647,7 @@ function normalizeReview(review) {
   const dimensions = Array.isArray(review.dimensions) ? review.dimensions : [];
   return {
     overall_score: clampNumber(review.overall_score, 0, 10, 0),
-    estimated_level: String(review.estimated_level || "unclear"),
+    estimated_level: normalizeEstimatedLevel(review.estimated_level),
     confidence: String(review.confidence || "Low"),
     review_scope: String(review.review_scope || ""),
     one_line_judgment: String(review.one_line_judgment || ""),
@@ -603,6 +661,12 @@ function normalizeReview(review) {
     related_work_context: normalizeStringList(review.related_work_context),
     decision_guidance: normalizeStringList(review.decision_guidance)
   };
+}
+
+function normalizeEstimatedLevel(value) {
+  const text = String(value || "unclear").trim();
+  if (/CCF/i.test(text)) return "unclear";
+  return text || "unclear";
 }
 
 function normalizeStringList(value) {
@@ -742,7 +806,65 @@ function normalizeSpace(value) {
 }
 
 function sameArxivId(a, b) {
-  return String(a || "").replace(/v\d+$/i, "") === String(b || "").replace(/v\d+$/i, "");
+  return stripArxivVersion(a) === stripArxivVersion(b);
+}
+
+function stripArxivVersion(value) {
+  return String(value || "").replace(/v\d+$/i, "");
+}
+
+function getPaperDate(paper) {
+  return parseDate(paper.published || paper.updated || arxivIdToMonthDate(paper.arxivId));
+}
+
+function filterRelatedWorkByDate(items, paperDate) {
+  if (!paperDate) return items;
+  return items.filter((item) => {
+    const date = parseDate(item.published || arxivIdToMonthDate(item.id));
+    return !date || date <= paperDate;
+  });
+}
+
+function arxivIdToMonthDate(arxivId) {
+  const match = stripArxivVersion(arxivId).match(/^(\d{2})(\d{2})\./);
+  if (!match) return "";
+  const year = Number(match[1]) >= 91 ? `19${match[1]}` : `20${match[1]}`;
+  return `${year}-${match[2]}-01`;
+}
+
+function parseDate(value) {
+  const date = new Date(String(value || ""));
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function parseArxivSubmittedDate(value) {
+  const match = String(value || "").match(/Submitted\s+(\d{1,2})\s+([A-Za-z]+),?\s+(\d{4})/i);
+  if (!match) return "";
+  const months = {
+    january: "01",
+    february: "02",
+    march: "03",
+    april: "04",
+    may: "05",
+    june: "06",
+    july: "07",
+    august: "08",
+    september: "09",
+    october: "10",
+    november: "11",
+    december: "12"
+  };
+  const month = months[match[2].toLowerCase()];
+  return month ? `${match[3]}-${month}-${match[1].padStart(2, "0")}` : "";
+}
+
+function numberOrNull(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function formatNullable(value) {
+  return value === null || value === undefined || value === "" ? "Unknown" : String(value);
 }
 
 function extractHtml(html, regex) {
