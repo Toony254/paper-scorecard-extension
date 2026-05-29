@@ -103,6 +103,8 @@ dist/paper-scorecard-extension.zip
 
 Submit this zip to the Chrome Web Store or Microsoft Edge Add-ons developer dashboard. Installing the reviewed store version avoids the developer-mode warning.
 
+Store listing draft and permission justifications are in `STORE_LISTING.md`.
+
 ### Use
 
 1. Open an arXiv abstract page, such as `https://arxiv.org/abs/1706.03762`.
@@ -285,6 +287,8 @@ dist/paper-scorecard-extension.zip
 ```
 
 将这个 zip 提交到 Chrome Web Store 或 Microsoft Edge Add-ons 开发者后台。用户安装审核通过的商店版本后，就不会再看到开发者模式提示。
+
+商店上架文案和权限说明草稿见 `STORE_LISTING.md`。
 
 ### 使用方式
 

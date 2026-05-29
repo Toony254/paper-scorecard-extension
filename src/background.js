@@ -107,9 +107,11 @@ async function migrateLegacySecrets() {
 }
 
 async function saveSettings(settings) {
+  const baseUrl = normalizeBaseUrl(settings.baseUrl || settings.endpoint || DEFAULT_SETTINGS.baseUrl);
+  await requestHostPermissionForBaseUrl(baseUrl);
   const next = {
     provider: normalizeProvider(settings.provider),
-    baseUrl: normalizeBaseUrl(settings.baseUrl || settings.endpoint || DEFAULT_SETTINGS.baseUrl),
+    baseUrl,
     model: String(settings.model || DEFAULT_SETTINGS.model).trim(),
     reasoningEffort: normalizeReasoningEffort(settings.reasoningEffort),
     disableResponseStorage: parseBoolean(settings.disableResponseStorage, DEFAULT_SETTINGS.disableResponseStorage),
@@ -131,6 +133,17 @@ async function saveSettings(settings) {
     chrome.storage.local.set(secrets)
   ]);
   return { ok: true, settings: { ...next, ...secrets } };
+}
+
+async function requestHostPermissionForBaseUrl(baseUrl) {
+  const origin = originPatternFromBaseUrl(baseUrl);
+  if (!origin || origin === "https://arxiv.org/*") return;
+  if (!chrome.permissions?.contains || !chrome.permissions?.request) return;
+  const hasPermission = await chrome.permissions.contains({ origins: [origin] });
+  if (!hasPermission) {
+    const granted = await chrome.permissions.request({ origins: [origin] });
+    if (!granted) throw new Error(`Host permission is required for ${origin}.`);
+  }
 }
 
 async function getCachedReview(paperId) {
@@ -734,6 +747,15 @@ function deriveBaseUrl(url) {
 
 function buildEndpoint(baseUrl, path) {
   return `${normalizeBaseUrl(baseUrl)}${path}`;
+}
+
+function originPatternFromBaseUrl(baseUrl) {
+  try {
+    const parsed = new URL(normalizeBaseUrl(baseUrl));
+    return `${parsed.protocol}//${parsed.host}/*`;
+  } catch (error) {
+    return "";
+  }
 }
 
 function extractOpenAIResponseText(payload) {

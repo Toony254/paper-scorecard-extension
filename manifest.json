@@ -12,7 +12,13 @@
   "permissions": ["storage", "activeTab", "sidePanel", "tabs", "offscreen"],
   "host_permissions": [
     "https://arxiv.org/*",
-    "<all_urls>"
+    "https://export.arxiv.org/*",
+    "https://api.semanticscholar.org/*",
+    "https://openrouter.ai/*"
+  ],
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://*/*"
   ],
   "background": {
     "service_worker": "src/background.js",
@@ -32,7 +38,7 @@
   "web_accessible_resources": [
     {
       "resources": ["vendor/pdfjs/pdf.worker.min.mjs"],
-      "matches": ["<all_urls>"]
+      "matches": ["https://arxiv.org/*"]
     }
   ],
   "options_page": "src/options.html",
